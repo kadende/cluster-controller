@@ -37,3 +37,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/hashicorp/go-getter"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/kadende/kadende-interfaces"
