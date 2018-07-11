@@ -1,0 +1,10 @@
+version: "3.4"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    volumes:
+      - ./:/go/src/github.com/kadende/cluster-controller
+      - ./vendor:/go/src/github.com/kadende/cluster-controller/vendor

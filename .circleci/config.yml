@@ -1,0 +1,20 @@
+version: 2
+jobs:
+  test:
+    machine:
+      image: circleci/classic:201708-01
+
+    working_directory: ~/cluster-controller
+
+    steps:
+      - checkout
+
+      - run:
+          name: run tests
+          command: docker-compose app make tests
+
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - test
