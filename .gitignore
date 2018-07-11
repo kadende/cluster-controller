@@ -2,3 +2,4 @@ plugins
 testDataPlugin
 vendor
 dist
+.idea
