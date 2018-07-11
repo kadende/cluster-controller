@@ -2,7 +2,7 @@ version: 2
 jobs:
   test:
     machine:
-      image: circleci/classic:201708-01
+      image: circleci/classic:201711-01
 
     working_directory: ~/cluster-controller
 
