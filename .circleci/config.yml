@@ -11,7 +11,7 @@ jobs:
 
       - run:
           name: run tests
-          command: docker-compose app make tests
+          command: docker-compose run app make tests
 
 workflows:
   version: 2
