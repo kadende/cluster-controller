@@ -7,4 +7,3 @@ services:
       target: builder
     volumes:
       - ./:/go/src/github.com/kadende/cluster-controller
-      - ./vendor:/go/src/github.com/kadende/cluster-controller/vendor
