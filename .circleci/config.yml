@@ -11,7 +11,15 @@ jobs:
 
       - run:
           name: run tests
-          command: docker-compose run app make test
+          command: |
+            # build app
+            docker-compose build app
+
+            # because of volumes
+            # vendor packages will be erased on runtime
+            docker-compose run app make dependecies
+
+            docker-compose run app make test
 
 workflows:
   version: 2
