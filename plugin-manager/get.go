@@ -11,7 +11,6 @@ import (
 	"errors"
 	"github.com/kadende/kadende-interfaces/spi"
 	"plugin"
-	"github.com/kadende/kadende-interfaces/pkg/types"
 	"github.com/kadende/kadende-interfaces/spi/instance"
 	log "github.com/Sirupsen/logrus"
 )
@@ -176,16 +175,6 @@ func (l loadPlugin) deletePlugin() {
 	os.Remove(l.pluginFileName())
 }
 
-type Greeter interface {
-	Greet()
-	Destroy(req *types.Any) error
-}
-
-
-type PluginA interface {
-	// Validate performs local validation on a provision request.
-	Greet(id instance.ID, context string)
-}
 func (l loadPlugin) InstallPlugin() (error)  {
 	// download plugin if its not installed yet
 	if !l.checkPluginFileExists() {
