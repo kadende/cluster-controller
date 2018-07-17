@@ -4,6 +4,36 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: builder
+      target: builder-env
+    command: dlv --listen=:4000 --headless=true --api-version=2 test ./plugin-manager/ -- -test.v -test.run TestInstallingProvider
+    ports:
+      - 4000:4000
+    security_opt:
+      - apparmor=unconfined
+    cap_add:
+      - SYS_PTRACE
+    environment:
+      - KADENDE_FILE_PROVIDER_DIR=/go/src/github.com/kadende/cluster-controller/plugin-manager/testDataPlugin
+
+    volumes:
+      - ./:/go/src/github.com/kadende/cluster-controller
+
+  app-dev-mode:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev-mode
+    command: dlv --listen=:4000 --headless=true --api-version=2 test ./plugin-manager/ -- -test.v -test.run TestInstallingProvider
+    ports:
+      - 4000:4000
+    security_opt:
+      - apparmor=unconfined
+    cap_add:
+      - SYS_PTRACE
+    volumes:
+      - ./:/go/src/github.com/kadende/cluster-controller
+  app-delve:
+    build:
+      context: .
     volumes:
       - ./:/go/src/github.com/kadende/cluster-controller

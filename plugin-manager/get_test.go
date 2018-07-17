@@ -5,6 +5,7 @@ import (
 	"testing"
 	"os"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"path"
 	"github.com/hashicorp/go-getter"
 	"strconv"
@@ -116,34 +117,102 @@ func TestDownloadingProvider(t *testing.T) {
 	}
 
 	for index, scenario := range testScenarios{
-		plugin, err := NewLoadPlugin(&scenario.plugin)
+		t.Run(strconv.Itoa(index), func(t *testing.T) {
+			plugin, err := NewLoadPlugin(&scenario.plugin)
 
-		if err != nil {
-			assert.Contains(t, err.Error(), scenario.expectedResults.errorMessage,
+			if err != nil {
+				assert.Contains(t, err.Error(), scenario.expectedResults.errorMessage,
+					scenario.plugin.url, scenario.plugin.pluginName, index)
+				return
+			}
+
+			err = plugin.downloadPlugin()
+
+			// if path is not empty
+			if scenario.expectedResults.path != "" {
+				assert.FileExists(t, path.Join(pluginPath, scenario.expectedResults.path), strconv.Itoa(index))
+			}
+			if err != nil && scenario.expectedResults.errorMessage == ""{
+				assert.Fail(t, err.Error())
+			}
+
+			var actualErrorMessage string
+			if err != nil {
+				actualErrorMessage = err.Error()
+			} else {
+				actualErrorMessage = ""
+			}
+
+			assert.Contains(t, actualErrorMessage, scenario.expectedResults.errorMessage,
 				scenario.plugin.url, scenario.plugin.pluginName, index)
-			continue
-		}
 
-		err = plugin.downloadPlugin()
+		})
+	}
 
-		// if path is not empty
-		if scenario.expectedResults.path != "" {
-			assert.FileExists(t, path.Join(pluginPath, scenario.expectedResults.path), strconv.Itoa(index))
-		}
-		if err != nil && scenario.expectedResults.errorMessage == ""{
-			assert.Fail(t, err.Error())
-		}
+}
 
-		var actualErrorMessage string
-		if err != nil {
-			actualErrorMessage = err.Error()
-		} else {
-			actualErrorMessage = ""
-		}
+func TestInstallingProvider(t *testing.T) {
+	pluginPath := getPluginPath()
+	// delete all downloaded plugins after running the tests
+	//defer os.RemoveAll(pluginPath)
 
-		assert.Contains(t, actualErrorMessage, scenario.expectedResults.errorMessage,
-			scenario.plugin.url, scenario.plugin.pluginName, index)
+	type expectedResults struct {
+		path string
+		errorMessage string
+	}
 
+	type scenario struct {
+		name string
+		plugin loadPlugin
+		expectedResults expectedResults
+	}
+
+
+	testScenarios := [2]scenario{
+		// testing happy case
+		{name: "happy-case", plugin: loadPlugin{pluginName: "file", pluginType: "provider", version: "0.0.1"},
+			expectedResults: expectedResults{path: "provider/file_0.0.1.so"}},
+
+		// test with a different version
+		{name: "invalid-plugin-interface", plugin: loadPlugin{pluginName: "file", pluginType: "provider", version: "0.0.0"},
+			expectedResults: expectedResults{errorMessage: "symbol Plugin not found"}},
+	}
+
+	for _, tScenario := range testScenarios{
+		//before we start testing lets test that we can download the plugins
+		t.Run(tScenario.name + "_download", func(t *testing.T) {
+			// delete all downloaded plugins after running the tests
+			// so that install plugin test will download again
+			defer os.RemoveAll(pluginPath)
+
+			plugin, err := NewLoadPlugin(&tScenario.plugin)
+			require.NoError(t, err)
+
+			err = plugin.downloadPlugin()
+			require.NoError(t, err)
+
+			require.True(t, plugin.checkPluginFileExists())
+		})
+
+		t.Run(tScenario.name, func(t *testing.T) {
+			//delete all downloaded plugins after running the tests
+			defer os.RemoveAll(pluginPath)
+
+			plugin, err := NewLoadPlugin(&tScenario.plugin)
+			require.NoError(t, err)
+
+			err = plugin.InstallPlugin()
+			if tScenario.expectedResults.errorMessage == ""{
+				require.NoError(t, err)
+				require.FileExists(t, path.Join(pluginPath, tScenario.expectedResults.path))
+			}else {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tScenario.expectedResults.errorMessage)
+				require.True(t, tScenario.plugin.checkPluginFileExists())
+			}
+
+
+		})
 	}
 
 }

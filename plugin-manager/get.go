@@ -9,7 +9,11 @@ import (
 	"path"
 	"strings"
 	"errors"
-	"github.com/kadende/kadende-interfaces/plugin-interface"
+	"github.com/kadende/kadende-interfaces/spi"
+	"plugin"
+	"github.com/kadende/kadende-interfaces/pkg/types"
+	"github.com/kadende/kadende-interfaces/spi/instance"
+	log "github.com/Sirupsen/logrus"
 )
 
 var defaultPluginPath = getDefaultPluginPath()
@@ -25,7 +29,7 @@ const  (
 type loadPlugin struct {
 	pluginName string
 	url string
-	pluginType plugin_interface.PluginType
+	pluginType spi.PluginType
 	version string
 	filePluginExists bool
 }
@@ -133,12 +137,15 @@ func (l *loadPlugin) setVersion() {
 	}
 }
 
-func (l *loadPlugin) checkPluginFileExists(){
+func (l *loadPlugin) checkPluginFileExists() (fileExists bool) {
+
 	if _, err := os.Stat(l.pluginFilePath()); os.IsNotExist(err) {
-		l.filePluginExists = false
+		fileExists = false
 	}else{
-		l.filePluginExists = true
+		fileExists = true
 	}
+	l.filePluginExists = fileExists
+	return
 }
 
 func (l loadPlugin) downloadPlugin() (error) {
@@ -163,4 +170,58 @@ func (l loadPlugin) downloadPlugin() (error) {
 
 	err = client.Get()
 	return err
+}
+
+func (l loadPlugin) deletePlugin() {
+	os.Remove(l.pluginFileName())
+}
+
+type Greeter interface {
+	Greet()
+	Destroy(req *types.Any) error
+}
+
+
+type PluginA interface {
+	// Validate performs local validation on a provision request.
+	Greet(id instance.ID, context string)
+}
+func (l loadPlugin) InstallPlugin() (error)  {
+	// download plugin if its not installed yet
+	if !l.checkPluginFileExists() {
+		err := l.downloadPlugin()
+		if err != nil{
+			return err
+		}
+	}
+
+	// load module
+	// 1. open the so file to load the symbols
+
+	plug, err := plugin.Open(l.pluginFilePath())
+	if err != nil{
+		l.deletePlugin()
+		return err
+	}
+
+
+	// 2. look up a symbol (an exported function or variable)
+	symPlugin, err := plug.Lookup("Plugin")
+	if err != nil {
+		errMessage := fmt.Sprintf("error loading: %s symbol Plugin not found", l.url)
+		log.Debugln(errMessage)
+		return errors.New(errMessage)
+	}
+
+
+	// 3. Assert that loaded symbol is of a desired type
+	_, ok := symPlugin.(instance.Plugin)
+	if !ok {
+		errMessage := fmt.Sprintf("error loading: %s " +
+			"symbol does not implement " +
+			"github.com/kadende/kadende-interfaces/spi/instance.Plugin interface", l.url)
+		log.Debugln(errMessage)
+		return errors.New(errMessage)
+	}
+	return nil
 }
