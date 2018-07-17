@@ -24,7 +24,7 @@
 #   go-tests = true
 #   unused-packages = true
 
-
+ignored = ["github.com/kadende/kadende-interfaces/*"]
 
 [[constraint]]
   name = "github.com/stretchr/testify"

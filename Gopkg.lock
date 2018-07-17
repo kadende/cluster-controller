@@ -58,12 +58,6 @@
   version = "v1.1.0"
 
 [[projects]]
-  name = "github.com/ghodss/yaml"
-  packages = ["."]
-  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
-  version = "v1.0.0"
-
-[[projects]]
   name = "github.com/go-ini/ini"
   packages = ["."]
   revision = "358ee7663966325963d4e8b2e1fbd570c5195153"
@@ -154,15 +148,9 @@
   ]
   revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
 
-[[projects]]
-  name = "gopkg.in/yaml.v2"
-  packages = ["."]
-  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3bb7c973841333149482c5f78d5af6c1f216a4ffeb91199614449ce0fb75b6ae"
+  inputs-digest = "b305c7fd10626f273a188b65c51e09b03f1b71bb9af8370c27d506f0879f0d30"
   solver-name = "gps-cdcl"
   solver-version = 1
